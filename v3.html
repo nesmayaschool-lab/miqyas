@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>مِقياس ٣</title>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#10151f;--ink:#f3ead7;--gold:#d8b45c;--teal:#2a9d8f;--dim:#9aa3b2;--panel:rgba(16,21,31,.94);color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family:Tajawal,system-ui,sans-serif}
+body{display:flex;flex-direction:column;overflow:hidden}
+.tabs{display:flex;gap:6px;padding:7px;background:var(--panel);overflow-x:auto}
+.tabs button{flex:1 0 auto;padding:8px 11px;border:1px solid #2c3546;background:transparent;color:var(--dim);border-radius:10px;font:700 13px Tajawal}
+.tabs button.on{border-color:var(--gold);color:var(--gold)}
+#view{flex:1;position:relative;min-height:90px;overflow:hidden;background:#0b0f17}
+video,#ov{position:absolute;inset:0;width:100%;height:100%}
+video{object-fit:cover}#ov{pointer-events:none}
+.tools{position:absolute;top:0;left:0;right:0;display:flex;gap:6px;justify-content:space-between;padding:6px;z-index:2}
+.fab{background:var(--panel);color:var(--ink);border:1px solid var(--gold);border-radius:18px;padding:6px 10px;font:700 12px Tajawal}
+#rec.on{background:#b3261e;border-color:#b3261e}
+#msg{position:absolute;bottom:24px;left:8px;right:8px;z-index:3;display:none;background:#3a2a10;border:1px solid var(--gold);padding:8px;border-radius:10px;font-size:13px;line-height:1.7}
+.panel{background:var(--panel);padding:8px 10px;display:grid;gap:7px;max-height:48vh;overflow-y:auto}
+.panel p{margin:0;font-size:12.5px;line-height:1.6;color:var(--dim)}
+.row{display:flex;gap:6px;align-items:center}
+.row label{font-size:13px;color:var(--dim);flex:1}
+input{width:80px;padding:6px;border-radius:8px;border:1px solid #2c3546;background:#0b0f17;color:var(--ink);font:700 15px Tajawal;text-align:center}
+.btns{display:flex;gap:6px}
+.go,.sm{flex:1;padding:11px 6px;border:0;border-radius:11px;background:var(--gold);color:#241a05;font:700 15px Tajawal}
+.go.alt,.sm.alt{background:var(--teal);color:#fff}.go:disabled{opacity:.4}
+.sm{padding:8px 4px;font-size:13px;background:#232c3d;color:var(--ink);border:1px solid #2c3546}.sm.on{border-color:var(--gold);color:var(--gold)}
+.chip{min-width:40px;padding:7px 10px;border-radius:20px;border:1px solid #2c3546;background:#232c3d;color:var(--ink);font:700 15px Tajawal}.chip.on{background:var(--teal);border-color:var(--teal)}
+#chips{display:flex;gap:6px;flex-wrap:wrap;min-height:10px}
+#start{position:fixed;inset:0;z-index:5;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:30px;text-align:center}
+#start h1{font:700 60px Amiri,serif;margin:0;color:var(--gold)}
+#start p{max-width:320px;color:var(--dim);line-height:1.8;margin:0}
+</style>
+</head>
+<body>
+<div class="tabs" id="tabs"><button data-m="dist" class="on">المسافة</button><button data-m="pts">نقاط وأشكال</button><button data-m="level">ميزان واستواء</button><button data-m="height">الارتفاع</button><button data-m="angle">الزاوية</button><button data-m="depth">العمق</button></div>
+<div id="view"><video id="cam" autoplay playsinline muted></video><canvas id="ov"></canvas>
+<div class="tools"><button class="fab" id="rec">● تسجيل فيديو</button><button class="fab" id="mt">🔊 الصوت</button><label class="fab">🎞 فيديو من الهاتف<input type="file" accept="video/*" capture="environment" id="vin" hidden></label></div><div id="msg"></div></div>
+<div class="panel" id="panel"></div>
+<div id="start"><h1>مِقياس</h1><p>الإصدار ٣ · قياس حيّ، نقاط مسمّاة (أ ب ج د)، محاذاة واستواء، وأوامر صوتية.</p><button class="go" id="startBtn" style="flex:none;padding:14px 40px">ابدأ</button></div>
+<script>
+var PI=Math.PI,oa=0,ob=90,og=0,elev=0,mode='dist',step=0,vA=null,t0=0,timing=false,got=false,mute=false,locked=null,cur={},geo={},P=[],sel=[],surf='floor',wallD=0,wallN=null,offX=0,offY=0,vert=false,wasL=false,LB=['أ','ب','ج','د','هـ','و','ز','ح'];
+var $=function(i){return document.getElementById(i)};
+function fmt(x){return Number(x).toLocaleString('ar-EG',{maximumFractionDigits:1})}
+function sp1(x){return(Math.round(x*10)/10).toString().replace('.',' فاصل ')}
+function num(i,d){var e=$(i);var v=e?parseFloat(e.value):NaN;return isNaN(v)?d:v}
+function dot(a,b){return a[0]*b[0]+a[1]*b[1]+a[2]*b[2]}
+function d3(a,b){return Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2])}
+function msg(t){var m=$('msg');m.textContent=t;m.style.display='block';clearTimeout(msg.t);msg.t=setTimeout(function(){m.style.display='none'},7000)}
+function speak(t){if(mute)return;try{speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(t);u.lang='ar-SA';u.rate=.9;var v=speechSynthesis.getVoices().filter(function(x){return/^ar/i.test(x.lang)})[0];if(v)u.voice=v;speechSynthesis.speak(u)}catch(e){}}
+function basis(){var a=oa*PI/180,b=ob*PI/180,g=og*PI/180,ca=Math.cos(a),sa=Math.sin(a),cb=Math.cos(b),sb=Math.sin(b),cg=Math.cos(g),sg=Math.sin(g);
+return{X:[ca*cg-sa*sb*sg,sa*cg+ca*sb*sg,-cb*sg],Y:[-sa*cb,ca*cb,sb],F:[-(ca*sg+sa*sb*cg),-(sa*sg-ca*sb*cg),-cb*cg]}}
+function onOri(e){if(e.beta==null)return;got=true;oa=e.alpha||0;ob=e.beta;og=e.gamma||0;elev=Math.asin(Math.max(-1,Math.min(1,basis().F[2])))*180/PI}
+function eyeH(){return num('eh',num('eh2',1.6))}
+function planePt(s){var F=basis().F,h=eyeH(),t;
+if(s==='floor'){if(F[2]>-.03)return null;t=h/-F[2];return[t*F[0],t*F[1],0]}
+if(!wallN)return null;var dn=F[0]*wallN[0]+F[1]*wallN[1];if(dn<.05)return null;t=wallD/dn;return[t*F[0],t*F[1],h+t*F[2]]}
+function dirP(p){var v=[p[0],p[1],p[2]-eyeH()],n=Math.hypot(v[0],v[1],v[2])||1;return[v[0]/n,v[1]/n,v[2]/n]}
+function calc(){var h=eyeH(),r={valid:false},g={};
+if(mode==='dist'){if(elev<-1){var e=-elev*PI/180;r={valid:true,k:'المسافة إلى النقطة',v:h/Math.tan(e),u:'م',sub:'مباشرة '+fmt(h/Math.sin(e))+' م'};g={cam:1,label:fmt(r.v)+' م'}}else r.hint='وجّه المركز نحو الأرض'}
+else if(mode==='pts'){var Q=planePt(surf),L=P[P.length-1];
+if(Q&&L){var D=d3(Q,L);r={valid:true,k:'من النقطة '+LB[P.length-1]+' إلى المركز',v:D,u:'م',sub:'اضغط ＋ لتثبيت نقطة'};g={a:dirP(L),label:fmt(D)+' م'}}
+else r.hint=Q?'اضغط ＋ لتثبيت النقطة '+LB[P.length]:(surf==='wall'&&!wallN?'اضبط الجدار أولاً':'وجّه المركز نحو السطح')}
+else if(mode==='height'){var d=num('dd',0);if(d>0&&elev>0){r={valid:true,k:'الارتفاع',v:d*Math.tan(elev*PI/180)+num('eh2',1.6),u:'م',sub:'المسافة الأفقية '+fmt(d)+' م'};g={cam:1,label:fmt(r.v)+' م'}}else r.hint=d>0?'وجّه المركز إلى أعلى':'اكتب المسافة الأفقية ثم وجّه لأعلى'}
+else if(mode==='depth'){if(timing)r={valid:true,k:'زمن السقوط',v:(performance.now()-t0)/1000,u:'ثانية'};else r.hint='اضغط «أفلتّ الحجر»'}
+else if(mode==='angle'){if(step===1&&vA){var an=Math.acos(Math.max(-1,Math.min(1,dot(vA,basis().F))))*180/PI;r={valid:true,k:'الزاوية بين الاتجاهين',v:an,u:'درجة'};g={a:vA,label:fmt(an)+'°'}}else r.hint='وجّه إلى الجسم الأول واضغط'}
+else if(mode==='level'){var dx=og-offX,dy=ob-(vert?90:0)-offY,tl=Math.hypot(dx,dy);r={valid:true,k:tl<.3?'✓ مستوٍ':'ميل السطح',v:tl,u:'درجة',sub:'فرق '+fmt(Math.tan(tl*PI/180)*1000)+' مم لكل متر',dx:dx,dy:dy}}
+geo=g;return r}
+function area3(s){var a=[0,0,0],n=s.length;for(var i=0;i<n;i++){var p=P[s[i]],q=P[s[(i+1)%n]];a[0]+=p[1]*q[2]-p[2]*q[1];a[1]+=p[2]*q[0]-p[0]*q[2];a[2]+=p[0]*q[1]-p[1]*q[0]}return Math.hypot(a[0],a[1],a[2])/2}
+function act(t){var s=sel.length?sel.slice():P.map(function(_,i){return i}),r;if(locked){locked=null;return}
+if(t==='dist'){if(s.length<2){msg('اختر نقطتين على الأقل.');return}var D=d3(P[s[0]],P[s[1]]);r={valid:1,k:'المسافة بين '+LB[s[0]]+' و'+LB[s[1]],v:D,u:'م',sub:'أفقياً '+fmt(Math.hypot(P[s[0]][0]-P[s[1]][0],P[s[0]][1]-P[s[1]][1]))+' م',t:t,s:s.slice(0,2)}}
+if(t==='area'){if(s.length<3){msg('اختر ثلاث نقاط على الأقل.');return}var pr=0;s.forEach(function(x,i){pr+=d3(P[x],P[s[(i+1)%s.length]])});r={valid:1,k:'مساحة الشكل '+s.map(function(i){return LB[i]}).join(' '),v:area3(s),u:'م²',sub:'المحيط '+fmt(pr)+' م',t:t,s:s}}
+if(t==='align'){if(!wallN){msg('اضبط الجدار وضع النقاط عليه أولاً.');return}if(s.length<2){msg('اختر نقطتين على الأقل.');return}
+var tg=[-wallN[1],wallN[0]],q=s.map(function(i){return[P[i][0]*tg[0]+P[i][1]*tg[1],P[i][2]]}),tol=num('tol',5)/1000;
+if(s.length===2){var dz=q[1][1]-q[0][1];r={valid:1,k:Math.abs(dz)<tol?'✓ النقطتان مستويتان':'فرق الارتفاع',v:Math.abs(dz)*100,u:'سم',sub:(dz>0?LB[s[1]]:LB[s[0]])+' هي الأعلى',t:t,s:s,dev:[0,dz]}}
+else{var a=q[0],b=q[q.length-1],dn=b[0]-a[0];if(Math.abs(dn)<.05){msg('الطرفان قريبان جداً.');return}var sl=(b[1]-a[1])/dn,dv=q.map(function(p){return p[1]-(a[1]+sl*(p[0]-a[0]))}),m=0;dv.forEach(function(x,i){if(Math.abs(x)>Math.abs(dv[m]))m=i});
+r={valid:1,k:Math.abs(dv[m])<tol?'✓ النقاط على استقامة الشريط':'أكبر انحراف عن الشريط',v:Math.abs(dv[m])*100,u:'سم',sub:'النقطة '+LB[s[m]]+(dv[m]>0?' فوق':' تحت')+' الشريط · ميل الشريط '+fmt(sl*1000)+' مم/م',t:t,s:s,dev:dv,tol:tol}}}
+locked=r;speak(r.k+' '+sp1(r.v)+' '+r.u+(r.t==='align'&&r.dev.length>2?'. '+r.sub:''))}
+/* الرسم */
+function focal(W,H){var V=$('cam'),vw=V.videoWidth||1080,vh=V.videoHeight||1920,s=Math.max(W/vw,H/vh);return(vw*s/2)/Math.tan((vw<vh?52:65)*PI/360)}
+function proj(d,W,H,B,f){var z=dot(d,B.F);if(z<.05)return null;return[W/2+f*dot(d,B.X)/z,H/2-f*dot(d,B.Y)/z]}
+function arrow(x,x1,y1,x2,y2){var an=Math.atan2(y2-y1,x2-x1);[['rgba(0,0,0,.65)',7],['#d8b45c',3]].forEach(function(s){x.strokeStyle=s[0];x.fillStyle=s[0];x.lineWidth=s[1];x.beginPath();x.moveTo(x1,y1);x.lineTo(x2,y2);x.stroke();x.beginPath();x.moveTo(x2,y2);x.lineTo(x2-13*Math.cos(an-.45),y2-13*Math.sin(an-.45));x.lineTo(x2-13*Math.cos(an+.45),y2-13*Math.sin(an+.45));x.closePath();x.fill()})}
+function line(x,a,b,c,w,dash){x.strokeStyle=c;x.lineWidth=w;x.setLineDash(dash||[]);x.beginPath();x.moveTo(a[0],a[1]);x.lineTo(b[0],b[1]);x.stroke();x.setLineDash([])}
+function pill(x,t,cx,cy){x.font='700 14px Tajawal,sans-serif';x.direction='rtl';var w=x.measureText(t).width+16;x.fillStyle='rgba(16,21,31,.9)';x.fillRect(cx-w/2,cy-12,w,24);x.strokeStyle='#d8b45c';x.lineWidth=1;x.strokeRect(cx-w/2,cy-12,w,24);x.fillStyle='#f3ead7';x.textAlign='center';x.textBaseline='middle';x.fillText(t,cx,cy);x.textBaseline='alphabetic'}
+function mk(x,p,col,lab,sub){x.fillStyle=col;x.strokeStyle='#000';x.lineWidth=1.5;x.beginPath();x.arc(p[0],p[1],7,0,7);x.fill();x.stroke();x.fillStyle='#fff';x.font='700 16px Amiri,serif';x.textAlign='center';x.direction='rtl';x.strokeText(lab,p[0],p[1]-12);x.fillText(lab,p[0],p[1]-12);if(sub){x.font='700 12px Tajawal,sans-serif';x.fillText(sub,p[0],p[1]+22)}}
+function ch(x,cx,cy,r){x.beginPath();x.arc(cx,cy,r,0,7);x.moveTo(cx-r*1.7,cy);x.lineTo(cx+r*1.7,cy);x.moveTo(cx,cy-r*1.7);x.lineTo(cx,cy+r*1.7);x.stroke()}
+function overlay(x,W,H){var B=basis(),f=focal(W,H),c=locked||cur,g=locked?{}:geo,cx0=W/2,cy0=H/2;x.textBaseline='alphabetic';
+function pj(p){return proj(dirP(p),W,H,B,f)}
+if(g.cam){arrow(x,W/2,H-4,cx0,cy0+22);if(g.label)pill(x,g.label,W/2,(H+cy0)/2)}
+if(g.a){var pa=proj(g.a,W,H,B,f);if(pa){arrow(x,pa[0],pa[1],cx0,cy0);if(g.label)pill(x,g.label,(pa[0]+cx0)/2,(pa[1]+cy0)/2-18)}}
+if(mode==='pts'){var L=locked,sl=L&&L.s||[];
+if(L&&L.t==='area'){var ps=sl.map(function(i){return pj(P[i])});if(ps.every(Boolean)){x.fillStyle='rgba(42,157,143,.3)';x.beginPath();ps.forEach(function(p,i){i?x.lineTo(p[0],p[1]):x.moveTo(p[0],p[1])});x.closePath();x.fill();x.strokeStyle='#2a9d8f';x.lineWidth=3;x.stroke()}}
+if(L&&L.t==='dist'){var a=pj(P[sl[0]]),b=pj(P[sl[1]]);if(a&&b){line(x,a,b,'#d8b45c',3);pill(x,fmt(L.v)+' م',(a[0]+b[0])/2,(a[1]+b[1])/2-16)}}
+if(L&&L.t==='align'){var q=sl.map(function(i){return pj(P[i])});if(q[0]&&q[q.length-1]){line(x,q[0],q[q.length-1],'#d8b45c',3);var P0=P[sl[0]],tg=[-wallN[1],wallN[0]],e1=pj([P0[0]-tg[0]*2,P0[1]-tg[1]*2,P0[2]]),e2=pj([P0[0]+tg[0]*2,P0[1]+tg[1]*2,P0[2]]);if(e1&&e2)line(x,e1,e2,'rgba(243,234,215,.7)',1.5,[6,6])}}
+P.forEach(function(p,i){var q=pj(p);if(!q)return;var on=sl.indexOf(i)>=0||sel.indexOf(i)>=0,sub='',col=on?'#2a9d8f':'#d8b45c';
+if(L&&L.t==='align'){var k=sl.indexOf(i);if(k>=0&&L.dev){var dv=L.dev[k];col=Math.abs(dv)>(L.tol||.005)?'#e5483d':'#2a9d8f';sub=(dv>0?'↑ ':dv<0?'↓ ':'')+fmt(Math.abs(dv)*100)+' سم'}}
+mk(x,q,col,LB[i],sub)})}
+if(mode==='level'){var vx=W/2,vy=H*.55,R=Math.min(W,H)*.26,bx=Math.max(-R+14,Math.min(R-14,c.dx*8)),by=Math.max(-R+14,Math.min(R-14,-c.dy*8));
+x.strokeStyle='rgba(0,0,0,.6)';x.lineWidth=5;x.beginPath();x.arc(vx,vy,R,0,7);x.stroke();x.strokeStyle='#d8b45c';x.lineWidth=2;x.beginPath();x.arc(vx,vy,R,0,7);x.stroke();ch(x,vx,vy,R*.2);
+x.fillStyle=c.v<.3?'#2a9d8f':'#d8b45c';x.beginPath();x.arc(vx+bx,vy+by,14,0,7);x.fill();x.stroke()}
+else if(mode!=='depth'){x.strokeStyle='rgba(0,0,0,.6)';x.lineWidth=5;ch(x,cx0,cy0,W*.045);x.strokeStyle='#d8b45c';x.lineWidth=2;ch(x,cx0,cy0,W*.045)}
+hud(x,W,c)}
+function hud(x,W,c){var bw=Math.min(W*.78,290),bh=bw*.44,bx=(W-bw)/2,by=44,gr=x.createRadialGradient(W/2,by,5,W/2,by,bw);gr.addColorStop(0,'#27324a');gr.addColorStop(1,'#141a28');
+x.globalAlpha=.93;x.fillStyle=gr;x.fillRect(bx,by,bw,bh);x.globalAlpha=1;x.strokeStyle=locked?'#2a9d8f':'#d8b45c';x.lineWidth=1.6;x.strokeRect(bx,by,bw,bh);x.lineWidth=.7;x.strokeRect(bx+4,by+4,bw-8,bh-8);
+x.textAlign='center';x.direction='rtl';x.fillStyle='#d8b45c';x.font='400 '+bw*.065+'px Amiri,serif';x.fillText((locked?'✓ مثبّت · ':'')+(c.k||'القياس الحيّ'),W/2,by+bh*.27);
+if(c.valid){var vt=fmt(c.v);x.direction='ltr';x.font='700 '+bw*.2+'px Amiri,serif';var vw=x.measureText(vt).width;x.font='400 '+bw*.075+'px Amiri,serif';var uw=x.measureText(c.u).width,sx=W/2-(vw+uw+8)/2;
+x.textAlign='left';x.fillStyle='#f3ead7';x.font='700 '+bw*.2+'px Amiri,serif';x.fillText(vt,sx,by+bh*.68);x.fillStyle='#2a9d8f';x.font='400 '+bw*.075+'px Amiri,serif';x.fillText(c.u,sx+vw+8,by+bh*.68);
+if(c.sub){x.textAlign='center';x.direction='rtl';x.fillStyle='#9aa3b2';x.font='400 '+bw*.044+'px Tajawal,sans-serif';x.fillText(c.sub,W/2,by+bh*.9)}}
+else{x.fillStyle='#9aa3b2';x.font='400 '+bw*.06+'px Tajawal,sans-serif';x.fillText(c.hint||'',W/2,by+bh*.68)}}
+function cover(x,V,W,H){x.fillStyle='#0b0f17';x.fillRect(0,0,W,H);if(V.videoWidth){var s=Math.max(W/V.videoWidth,H/V.videoHeight),dw=V.videoWidth*s,dh=V.videoHeight*s;x.drawImage(V,(W-dw)/2,(H-dh)/2,dw,dh)}}
+var rec=null,chunks=[],cv=document.createElement('canvas'),cx=cv.getContext('2d'),mt='',ext='webm';
+function frame(){var vw=$('view'),w=vw.clientWidth,h=vw.clientHeight,d=window.devicePixelRatio||1,c=$('ov');
+if(w&&h){if(c.width!==Math.round(w*d)){c.width=Math.round(w*d);c.height=Math.round(h*d)}
+if(!locked)cur=calc();
+if(mode==='level'&&!locked&&cur.valid){if(cur.v<.3&&!wasL){wasL=true;speak('مستوٍ')}else if(cur.v>.8)wasL=false}
+var x=c.getContext('2d');x.setTransform(d,0,0,d,0,0);x.clearRect(0,0,w,h);overlay(x,w,h);
+if(rec){if(cv.width!==w*2){cv.width=w*2;cv.height=h*2}cx.setTransform(2,0,0,2,0,0);cover(cx,$('cam'),w,h);overlay(cx,w,h)}}
+requestAnimationFrame(frame)}
+/* التشغيل */
+async function start(){try{if(window.DeviceOrientationEvent&&DeviceOrientationEvent.requestPermission)await DeviceOrientationEvent.requestPermission()}catch(e){}
+window.addEventListener('deviceorientation',onOri);$('start').style.display='none';speak('أهلاً. تم تفعيل الصوت');
+try{$('cam').srcObject=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}})}catch(e){msg('تعذّر فتح الكاميرا ('+(e&&e.name||'خطأ')+'). اسمح بها أو استخدم «فيديو من الهاتف».')}
+setTimeout(function(){if(!got)msg('لا تصل قراءات حساس الميل. اسمح للموقع بحساسات الحركة.')},2500)}
+$('startBtn').onclick=start;
+$('mt').onclick=function(){mute=!mute;this.textContent=mute?'🔇 صامت':'🔊 الصوت';if(!mute)speak('تم تشغيل الصوت')};
+$('vin').onchange=function(){var f=this.files[0];if(!f)return;var V=$('cam');V.srcObject=null;V.src=URL.createObjectURL(f);V.loop=true;V.muted=true;V.play()};
+$('rec').onclick=function(){var b=this;if(rec){rec.stop();return}
+if(!window.MediaRecorder||!cv.captureStream){msg('التسجيل غير مدعوم في هذا المتصفح.');return}
+mt=['video/mp4','video/webm;codecs=vp9','video/webm'].filter(function(t){return MediaRecorder.isTypeSupported(t)})[0]||'';ext=/mp4/.test(mt)?'mp4':'webm';
+var vw=$('view');cv.width=vw.clientWidth*2;cv.height=vw.clientHeight*2;chunks=[];rec=new MediaRecorder(cv.captureStream(30),mt?{mimeType:mt}:{});
+rec.ondataavailable=function(e){if(e.data&&e.data.size)chunks.push(e.data)};
+rec.onstop=function(){b.classList.remove('on');b.textContent='● تسجيل فيديو';rec=null;if(!chunks.length)return;var a=document.createElement('a');a.href=URL.createObjectURL(new Blob(chunks,{type:mt||'video/webm'}));a.download='qiyas.'+ext;document.body.appendChild(a);a.click();setTimeout(function(){a.remove()},1000);msg('تم حفظ الفيديو في التنزيلات.')};
+rec.start(1000);b.classList.add('on');b.textContent='■ إيقاف وحفظ'};
+/* الصوت: التعرّف على الأوامر */
+var SR=window.SpeechRecognition||window.webkitSpeechRecognition,LM={'ا':0,'أ':0,'الف':0,'ألف':0,'ب':1,'باء':1,'با':1,'ج':2,'جيم':2,'د':3,'دال':3,'ه':4,'هـ':4,'هاء':4,'واو':5,'ز':6,'زاي':6,'ح':7,'حاء':7};
+function letters(t){var o=[];t.replace(/[\u064B-\u0652ـ]/g,'').split(/[^\u0621-\u064Aa-z]+/i).forEach(function(w){if(!w||w==='و')return;var k=w in LM?w:(w[0]==='و'&&w.slice(1) in LM?w.slice(1):null);if(k!==null&&LM[k]<P.length&&o.indexOf(LM[k])<0)o.push(LM[k])});return o}
+function voice(){if(!SR){msg('التعرّف الصوتي غير مدعوم في هذا المتصفح.');return}var r=new SR();r.lang='ar-SA';r.onresult=function(e){var t=e.results[0][0].transcript;msg('سمعتُ: '+t);runCmd(t)};r.onerror=function(){msg('لم أسمعك. حاول مرة أخرى.')};r.start();msg('🎤 تحدّث الآن: «المسافة بين أ وب» أو «مساحة أ ب ج د»')}
+function runCmd(t){var l=letters(t);locked=null;
+if(/امسح|احذف|مسح/.test(t)){P=[];sel=[];chips();return}
+if(/استواء|استوا|محاذا|مستوي|افقي|أفقي/.test(t)){sel=l;chips();act('align');return}
+if(/مساحة|مساحه/.test(t)){sel=l;chips();act('area');return}
+if(/مسافة|مسافه|بين|بعد/.test(t)){sel=l.slice(0,2);chips();act('dist');return}
+if(/نقطة|نقطه|اضف|أضف|سجل|ثبت/.test(t)){addPt();return}
+if(l.length>=3){sel=l;chips();act('area')}else if(l.length===2){sel=l;chips();act('dist')}else msg('لم أفهم الأمر. قل مثلاً: المسافة بين أ وب.')}
+function addPt(){if(locked)locked=null;var q=planePt(surf);if(!q){msg(surf==='wall'&&!wallN?'اضبط الجدار أولاً.':'وجّه المركز نحو السطح.');return}if(P.length>=8){msg('الحد الأقصى ٨ نقاط.');return}P.push(q);speak('النقطة '+LB[P.length-1]);chips()}
+function chips(){var c=$('chips');if(!c)return;c.innerHTML=P.map(function(_,i){return'<button class="chip'+(sel.indexOf(i)>=0?' on':'')+'" data-i="'+i+'">'+LB[i]+'</button>'}).join('');c.querySelectorAll('.chip').forEach(function(b){b.onclick=function(){var i=+b.dataset.i,k=sel.indexOf(i);k>=0?sel.splice(k,1):sel.push(i);locked=null;chips()}})}
+function lockSimple(){if(locked){locked=null;render();return}var r=calc();if(!r.valid){msg(r.hint||'لا يوجد قياس.');return}locked=r;speak(r.k+' '+sp1(r.v)+' '+r.u);var g=$('go');if(g)g.textContent='قياس جديد'}
+function render(){var p=$('panel');locked=null;
+if(mode==='dist'){p.innerHTML='<p>وجّه المركز نحو نقطة على الأرض فيتغير الرقم مع حركتك والسهم يصل الكاميرا بالنقطة. اضغط للتثبيت.</p><div class="row"><label>ارتفاع عينك عن الأرض (م)</label><input id="eh" type="number" step="0.01" value="1.6"></div><div class="btns"><button class="go" id="go">ثبّت القياس</button></div>';$('go').onclick=lockSimple}
+if(mode==='pts'){p.innerHTML='<p>قف ثابتاً وحرّك الهاتف فقط. ثبّت نقاطاً (أ ب ج…) ثم اختر منها للقياس، أو قل أمراً صوتياً.</p><div class="btns"><button class="sm" id="sf">على الأرض</button><button class="sm" id="sw">على جدار</button><button class="sm alt" id="wl">اضبط الجدار</button></div><div class="row"><label>ارتفاع عينك (م)</label><input id="eh" type="number" step="0.01" value="1.6"><label>تسامح المحاذاة (مم)</label><input id="tol" type="number" value="5"></div><div class="btns"><button class="go alt" id="add">＋ نقطة</button><button class="go" id="vc">🎤 أمر صوتي</button></div><div id="chips"></div><div class="btns"><button class="sm" id="b1">📏 مسافة</button><button class="sm" id="b2">⬛ مساحة</button><button class="sm" id="b3">〰 محاذاة</button><button class="sm" id="b4">مسح</button></div>';
+var us=function(){$('sf').classList.toggle('on',surf==='floor');$('sw').classList.toggle('on',surf==='wall')};us();
+$('sf').onclick=function(){surf='floor';us()};$('sw').onclick=function(){surf='wall';us();if(!wallN)msg('اضبط الجدار: وجّه المركز إلى أسفل الجدار قبالتك مباشرة واضغط «اضبط الجدار».')};
+$('wl').onclick=function(){var q=planePt('floor');if(!q){msg('وجّه المركز نحو أسفل الجدار (عند التقائه بالأرض).');return}wallD=Math.hypot(q[0],q[1]);wallN=[q[0]/wallD,q[1]/wallD,0];surf='wall';us();msg('الجدار على بعد '+fmt(wallD)+' م. قف قبالته مباشرة وثبّت نقاطك عليه.');speak('تم ضبط الجدار')};
+$('add').onclick=addPt;$('vc').onclick=voice;$('b1').onclick=function(){act('dist')};$('b2').onclick=function(){act('area')};$('b3').onclick=function(){act('align')};$('b4').onclick=function(){P=[];sel=[];locked=null;chips()};chips()}
+if(mode==='height'){p.innerHTML='<p>اكتب المسافة الأفقية إلى الشيء (مثلاً 100 م للطائرة)، ثم وجّه المركز إلى أعلى نقطة، فيظهر الارتفاع حيّاً.</p><div class="row"><label>المسافة الأفقية (م)</label><input id="dd" type="number" placeholder="100"></div><div class="row"><label>ارتفاع عينك (م)</label><input id="eh2" type="number" step="0.01" value="1.6"></div><div class="btns"><button class="go" id="go">ثبّت القياس</button></div>';$('go').onclick=lockSimple}
+if(mode==='angle'){p.innerHTML='<p>وجّه المركز إلى الجسم الأول واضغط، ثم حرّك نحو الثاني. الزاوية بينهما حيّة والسهم يربط الاتجاهين.</p><div class="btns"><button class="go" id="go">سجّل الاتجاه الأول</button></div>';
+$('go').onclick=function(){if(locked){step=0;vA=null;render();return}if(step===0){vA=basis().F;step=1;$('go').textContent='ثبّت الزاوية';speak('تم تسجيل الاتجاه الأول');return}lockSimple()}}
+if(mode==='level'){p.innerHTML='<p>ضع الهاتف على السطح المراد فحصه. الفقاعة تتجه نحو الجانب الأعلى، وينطق «مستوٍ» عندما يقل الميل عن ٠٫٣ درجة. لأفضل دقة: صفّر على سطح، ثم دوّر الهاتف ١٨٠° وأعد الفحص.</p><div class="btns"><button class="sm on" id="hz">سطح أفقي (الهاتف مسطّح)</button><button class="sm" id="vt">جدار رأسي (الهاتف واقف)</button></div><div class="btns"><button class="go alt" id="zr">صفّر هنا</button><button class="go" id="go">ثبّت القراءة</button></div>';
+var uv=function(){$('hz').classList.toggle('on',!vert);$('vt').classList.toggle('on',vert)};
+$('hz').onclick=function(){vert=false;offX=offY=0;uv()};$('vt').onclick=function(){vert=true;offX=offY=0;uv()};$('zr').onclick=function(){offX=og;offY=ob-(vert?90:0);msg('تم التصفير على هذا السطح.')};$('go').onclick=lockSimple}
+if(mode==='depth'){p.innerHTML='<p>قف عند حافة البئر. اضغط «أفلتّ» مع إفلات الحجر، ثم «سمعت الصدى» عند سماع الارتطام.</p><div class="btns"><button class="go alt" id="g1">أفلتّ الحجر</button><button class="go" id="g2" disabled>سمعت الصدى</button></div>';
+$('g1').onclick=function(){if(locked){render();return}t0=performance.now();timing=true;$('g1').disabled=true;$('g2').disabled=false};
+$('g2').onclick=function(){var t=(performance.now()-t0)/1000,k=Math.sqrt(2/9.81),s=(-k+Math.sqrt(k*k+4*t/340))/(2/340);timing=false;locked={valid:true,k:'عمق البئر',v:s*s,u:'م',sub:'زمن السقوط '+t.toFixed(2)+' ث'};speak('عمق البئر '+sp1(s*s)+' متر');$('g2').disabled=true;$('g1').disabled=false;$('g1').textContent='قياس جديد'}}}
+document.querySelectorAll('.tabs button').forEach(function(b){b.onclick=function(){document.querySelectorAll('.tabs button').forEach(function(x){x.classList.remove('on')});b.classList.add('on');mode=b.dataset.m;step=0;vA=null;timing=false;render()}});
+render();frame();
+</script>
+</body>
+</html>
