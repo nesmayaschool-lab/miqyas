@@ -125,18 +125,27 @@ else if(t==='stk'){var sp=sh.txt.split(' '),lb=sp.length>1?sp.shift()+' ':'',vl=
 else if(t==='pt'){x.fillStyle=c;x.strokeStyle='#000';x.lineWidth=2;x.beginPath();x.arc(p[0][0],p[0][1],11,0,7);x.fill();x.stroke()}
 else if(t==='pen'){var al=sh.al||1;x.lineJoin='round';x.lineCap='round';x.beginPath();p.forEach(function(q,j){j?x.lineTo(q[0],q[1]):x.moveTo(q[0],q[1])});if(al>=1){x.strokeStyle='rgba(0,0,0,.5)';x.lineWidth=w+3;x.stroke()}x.strokeStyle=rgba(c,al);x.lineWidth=w;x.stroke()}
 else if(t==='circle'){var r=Math.hypot(p[1][0]-p[0][0],p[1][1]-p[0][1]);x.beginPath();x.arc(p[0][0],p[0][1],r,0,7);x.fillStyle=rgba(c,.12);x.fill();ell(p[0][0],p[0][1],r,r)}
-else if(t==='cyl'){var r2=Math.hypot(p[1][0]-p[0][0],p[1][1]-p[0][1]),ry=Math.max(6,r2*.32),bx=p[0][0],by=p[0][1],tx2=p[2][0],ty2=p[2][1];
-/* 1) الخلف: جدار شفاف + قوسي الخلف */
-var gr=x.createLinearGradient(bx-r2,0,bx+r2,0);gr.addColorStop(0,rgba(c,.28));gr.addColorStop(.4,rgba(c,.04));gr.addColorStop(.6,rgba(c,.04));gr.addColorStop(1,rgba(c,.28));
-x.beginPath();x.moveTo(bx-r2,by);x.lineTo(tx2-r2,ty2);x.lineTo(tx2+r2,ty2);x.lineTo(bx+r2,by);x.closePath();x.fillStyle=gr;x.fill();
-x.strokeStyle=rgba(c,.45);x.lineWidth=2;x.beginPath();x.ellipse(bx,by,r2,ry,0,PI,2*PI);x.stroke();x.beginPath();x.ellipse(tx2,ty2,r2,ry,0,PI,2*PI);x.stroke();
-/* 2) الجسم الحقيقي فوق الخلف */
-cutout(x,sh,E.W,E.H);
-/* 3) الأمام فوق الجسم */
-x.beginPath();x.ellipse(tx2,ty2,r2,ry,0,0,2*PI);x.fillStyle=rgba(c,.05);x.fill();
-ln(x,[bx-r2,by],[tx2-r2,ty2],c,Math.max(3,w));ln(x,[bx+r2,by],[tx2+r2,ty2],c,Math.max(3,w));
-x.beginPath();x.ellipse(bx,by,r2,ry,0,0,PI);x.strokeStyle='rgba(0,0,0,.65)';x.lineWidth=w+5;x.stroke();x.strokeStyle=c;x.lineWidth=w+2;x.stroke();
-x.beginPath();x.ellipse(tx2,ty2,r2,ry,0,0,PI);x.strokeStyle='rgba(0,0,0,.55)';x.lineWidth=w+4;x.stroke();x.strokeStyle=c;x.lineWidth=w+1.5;x.stroke()}
+else if(t==='cyl'){var r2=Math.hypot(p[1][0]-p[0][0],p[1][1]-p[0][1]),ry=Math.max(5,r2*.30),bx=p[0][0],by=p[0][1],tx2=p[2][0],ty2=p[2][1];
+/* أسطوانة مجسّمة: جدران جانبية + فتحة وسط تظهر الجسم داخلها */
+x.save();
+/* الجدار الأيسر والأيمن فقط (لا نملأ الوسط) */
+var wall=Math.max(10,r2*0.22);
+x.beginPath();x.moveTo(bx-r2,by);x.lineTo(tx2-r2,ty2);x.lineTo(tx2-r2+wall,ty2);x.lineTo(bx-r2+wall,by);x.closePath();
+x.fillStyle=rgba(c,.38);x.fill();x.strokeStyle=rgba(c,.7);x.lineWidth=1.5;x.stroke();
+x.beginPath();x.moveTo(bx+r2-wall,by);x.lineTo(tx2+r2-wall,ty2);x.lineTo(tx2+r2,ty2);x.lineTo(bx+r2,by);x.closePath();
+x.fillStyle=rgba(c,.38);x.fill();x.strokeStyle=rgba(c,.7);x.lineWidth=1.5;x.stroke();
+/* قوس الخلف (خلف الجسم) */
+x.strokeStyle=rgba(c,.35);x.lineWidth=2;x.beginPath();x.ellipse(bx,by,r2,ry,0,PI,2*PI);x.stroke();
+x.beginPath();x.ellipse(tx2,ty2,r2,ry,0,PI,2*PI);x.stroke();
+/* الخطوط الجانبية */
+ln(x,[bx-r2,by],[tx2-r2,ty2],c,Math.max(2.5,w));
+ln(x,[bx+r2,by],[tx2+r2,ty2],c,Math.max(2.5,w));
+/* قوس الأمام (فوق الجسم) */
+x.beginPath();x.ellipse(bx,by,r2,ry,0,0,PI);x.strokeStyle='rgba(0,0,0,.55)';x.lineWidth=w+4;x.stroke();x.strokeStyle=c;x.lineWidth=w+2;x.stroke();
+x.beginPath();x.ellipse(tx2,ty2,r2,ry,0,0,PI);x.strokeStyle='rgba(0,0,0,.5)';x.lineWidth=w+3;x.stroke();x.strokeStyle=c;x.lineWidth=w+1.5;x.stroke();
+/* ظل خفيف داخلي يعطي إحساس العمق */
+x.beginPath();x.ellipse((bx+tx2)/2,(by+ty2)/2,r2*0.85,Math.abs(by-ty2)*0.45,0,0,7);x.strokeStyle=rgba(c,.12);x.lineWidth=1;x.stroke();
+x.restore()}
 else if(t==='band'){poly(p,.16);var cn=zoneCount(sh,E),cx0=(p[0][0]+p[1][0]+p[2][0]+p[3][0])/4,cy0=(p[0][1]+p[1][1]+p[2][1]+p[3][1])/4;[[p[0],p[1]],[p[3],p[2]]].forEach(function(e,j){var mx=(e[0][0]+e[1][0])/2,my=(e[0][1]+e[1][1])/2,dx=mx-cx0,dy=my-cy0,n=Math.hypot(dx,dy)||1;pill(x,(j?'بعد':'قبل')+(cn?' '+f2(cn[j?2:0]):''),mx+dx/n*60,my+dy/n*60,c)});if(cn&&cn[1])pill(x,'داخل '+f2(cn[1]),cx0,cy0,'#e5483d')}
 else if(t==='area'){poly(p,.22);ax=[p.reduce(function(s,q){return s+q[0]},0)/p.length,p.reduce(function(s,q){return s+q[1]},0)/p.length]}
 else if(t==='room'){poly(p.slice(0,4),.12);ln(x,p[0],p[4],c,3);pill(x,'السقف',p[4][0],p[4][1]-40,c);ax=null}
@@ -294,7 +303,7 @@ function aiLoop(){if(!ai.on)return;var V=$('cam');if(!ai.busy&&V.videoWidth&&V.r
 function snap(){var W=cvs.clientWidth;S.forEach(function(s){if(!s.trk||!s.p||!ai.dets.length||!/^(circle|cyl)$/.test(s.t))return;var c=s.t==='cyl'?[s.p[0][0],(s.p[0][1]+s.p[2][1])/2]:s.p[0],cx=c[0]*W,cy=c[1]*W,b=null,bd=1e9;ai.dets.forEach(function(d){var dd=Math.hypot(d.x+d.w/2-cx,d.y+d.h/2-cy);if(s.tg&&d.c===s.tg.c)dd*=.55;if(dd<bd){bd=dd;b=d}});if(b&&bd<W*.65){s.tg=b;aiFit(s,b,W,.85);s._lost=0}else if(s.tg){s._lost=(s._lost||0)+1;if(s._lost>25)s.tg=null}});
 if(selDet){var bb=null,bd2=1e9;ai.dets.forEach(function(d){var dd=Math.hypot(d.x-selDet.x,d.y-selDet.y);if(d.c===selDet.c&&dd<bd2){bd2=dd;bb=d}});if(bb&&bd2<W*.4)selDet=bb}}
 function mv(s,k,x,y,W,a){s.p[k][0]+=(x/W-s.p[k][0])*a;s.p[k][1]+=(y/W-s.p[k][1])*a}
-function aiFit(s,g,W,a){var cx=g.x+g.w/2,cy=g.y+g.h,rr;if(s.t==='circle'){rr=Math.max(18,g.w*.55);mv(s,0,cx,cy,W,a);mv(s,1,cx+rr,cy,W,a)}else if(s.t==='cyl'){var rw=s.rw||1,cov=s.cov||.45,off=s.off||0;/* نصف قطر ≈ نصف عرض الجسم + هامش بسيط */rr=Math.max(18,g.w*.52)*rw;rr=(a<1&&s._r)?s._r+(rr-s._r)*.35:rr;s._r=rr;var yb=g.y+g.h*(.5+cov/2+off),yt=g.y+g.h*(.5-cov/2+off);mv(s,0,cx,yb,W,a);mv(s,1,cx+rr,yb,W,a);mv(s,2,cx,yt,W,a);s.g=g;if(performance.now()-(s._mt||0)>90){s._mt=performance.now();s.mk=boxMask(g,!!s.per,W);s.bm=1;updMask(s)}}}
+function aiFit(s,g,W,a){var cx=g.x+g.w/2,cy=g.y+g.h,rr;if(s.t==='circle'){rr=Math.max(16,g.w*.52);mv(s,0,cx,cy,W,a);mv(s,1,cx+rr,cy,W,a)}else if(s.t==='cyl'){var rw=s.rw||1,cov=s.cov||.48,off=s.off||0;rr=Math.max(16,g.w*.48)*rw;rr=(a<1&&s._r)?s._r+(rr-s._r)*.3:rr;s._r=rr;var yb=g.y+g.h*(.5+cov/2+off),yt=g.y+g.h*(.5-cov/2+off);mv(s,0,cx,yb,W,a);mv(s,1,cx+rr,yb,W,a);mv(s,2,cx,yt,W,a);s.g=g}}
 function aiMove(W){}
 function sg(a,b,p){return(b[0]-a[0])*(p[1]-a[1])-(b[1]-a[1])*(p[0]-a[0])}
 function pip(q,p){var o=false,i,j;for(i=0,j=q.length-1;i<q.length;j=i++)if((q[i][1]>p[1])!==(q[j][1]>p[1])&&p[0]<(q[j][0]-q[i][0])*(p[1]-q[i][1])/(q[j][1]-q[i][1])+q[i][0])o=!o;return o}
@@ -349,15 +358,11 @@ var sx=Math.max(0,Math.floor(m.box.x*k+mo[0]*k)-3),sy=Math.max(0,Math.floor(m.bo
 tmpc.width=sw;tmpc.height=sh2;tmpx.setTransform(1,0,0,1,-sx,-sy);cover(tmpx,V,W,H);tmpx.setTransform(1,0,0,1,0,0);tmpx.globalCompositeOperation='destination-in';tmpx.drawImage(sh.mc,-sx+mo[0]*k,-sy+mo[1]*k,W,(gth||tmpc.height)*k);tmpx.globalCompositeOperation='source-over';x.drawImage(tmpc,sx,sy)}
 function boxMask(g,per,W){var k=TW/W,th=gth||Math.round(TW*cvs.clientHeight/W),m=new Uint8Array(TW*th),x0=Math.max(0,Math.floor(g.x*k)),y0=Math.max(0,Math.floor(g.y*k)),x1=Math.min(TW-1,Math.ceil((g.x+g.w)*k)),y1=Math.min(th-1,Math.ceil((g.y+g.h)*k)),cx=(x0+x1)/2,cy=(y0+y1)/2,rx=(x1-x0)/2,ry=(y1-y0)/2,cnt=0,i,j;
 for(j=y0;j<=y1;j++)for(i=x0;i<=x1;i++){var ok=true;if(per){var dx=(i-cx)/((rx*.92)||1),dy=(j-cy)/(ry||1);ok=dx*dx+dy*dy<=1}if(ok){m[j*TW+i]=1;cnt++}}return{m:m,cnt:cnt,box:{x:x0,y:y0,w:x1-x0+1,h:y1-y0+1}}}
-function placeCyl(p){var E=env(),W=E.W,H=E.H,k=TW/W,det=null,g=null,mk=null,refs,thr=55,how,ti,ts=[55,38,26];
-if(ai.on)ai.dets.forEach(function(d){if(p[0]>=d.x&&p[0]<=d.x+d.w&&p[1]>=d.y&&p[1]<=d.y+d.h&&(!det||d.w*d.h<det.w*det.h))det=d});grab(W,H);
-function col(x0,y0){var i=Math.max(0,Math.min(TW-1,Math.round(x0*k))),j=Math.max(0,Math.min(gth-1,Math.round(y0*k))),q=(j*TW+i)*4;return[gd[q],gd[q+1],gd[q+2]]}
-if(det){g=det;how='الذكاء الاصطناعي';var cx=det.x+det.w/2;refs=[col(cx,det.y+det.h*.25),col(cx,det.y+det.h*.5),col(cx,det.y+det.h*.78)];thr=60;mk=segMask(Math.round(cx*k),Math.round((det.y+det.h*.5)*k),refs,thr,{x:det.x*k-3,y:det.y*k-3,w:det.w*k+6,h:det.h*k+6})}
-else{var ref=col(p[0],p[1]);for(ti=0;ti<3&&!mk;ti++){thr=ts[ti];mk=segMask(Math.round(p[0]*k),Math.round(p[1]*k),[ref],thr,null)}refs=[ref];if(mk){var kk=W/TW;g={x:mk.box.x*kk,y:mk.box.y*kk,w:mk.box.w*kk,h:mk.box.h*kk};how='تحديد حدود الجسم باللون'}}
-if(!g){g={x:p[0]-40,y:p[1]-100,w:80,h:200};how='تقدير'}
-var per=!!(det&&det.c==='person');mk=boxMask(g,per,W);
-var sh={t:'cyl',p:[[0,0],[0,0],[0,0]],c:COLS[ci],w:pw,trk:1,bm:1,per:per,cov:.45,rw:1,_lost:0};aiFit(sh,g,W,1);sh.mk=mk;sh.refs=null;sh.thr=thr;sh.mo=[0,0];updMask(sh);if(det)sh.tg=det;S.push(sh);sel=S.length-1;
-msg('الجسم داخل الأسطوانة ('+how+'): محيطه محاط (يمين/يسار/أمام/خلف) والرأس والقدم خارجها. تثبت على الجسم وتتبعه. استخدم أزرار أعلى/أسفل/أوسع/أضيق للضبط الدقيق.')}
+function placeCyl(p){var E=env(),W=E.W,det=null,g,how;
+if(ai.on)ai.dets.forEach(function(d){if(p[0]>=d.x&&p[0]<=d.x+d.w&&p[1]>=d.y&&p[1]<=d.y+d.h&&(!det||d.w*d.h<det.w*det.h))det=d});
+if(det){g=det;how='ذكاء اصطناعي'}else{g={x:p[0]-45,y:p[1]-110,w:90,h:220};how='يدوي'}
+var sh={t:'cyl',p:[[0,0],[0,0],[0,0]],c:COLS[ci],w:pw,trk:1,per:!!(det&&det.c==='person'),cov:.48,rw:1,_lost:0};aiFit(sh,g,W,1);if(det)sh.tg=det;S.push(sh);sel=S.length-1;
+msg('أسطوانة مجسّمة حول الجسم ('+how+'): الوسط مفتوح فيظهر الكائن داخلها، والجزء العلوي والسفلي خارجها. تتحرك معه. غيّر لونها من الألوان، واضبط الحجم بالأزرار.')}
 function pickDet(p){if(!ai.on){selDet=null;return}var b=null,ba=1e12;ai.dets.forEach(function(d){if(p[0]>=d.x&&p[0]<=d.x+d.w&&p[1]>=d.y&&p[1]<=d.y+d.h&&d.w*d.h<ba){ba=d.w*d.h;b=d}});selDet=b;if(b)msg('اخترتُ: '+an(b.c)+'. اختر: أسطوانة تحيط به وتتبعه، أو دائرة، أو قياس مسافته وارتفاعه.')}
 function objShape(t){var d=selDet;if(!d)return;if(t==='cyl'){placeCyl([d.x+d.w/2,d.y+d.h/2]);return}addA(t);var sh=S[S.length-1];sh.tg=d;sh.trk=1;aiFit(sh,d,cvs.clientWidth,1);msg('الشكل يحيط بـ'+an(d.c)+' ويتتبّعه.')}
 function objMeasure(){var d=selDet;if(!d){msg('اضغط أولاً على جسم داخل مربع الذكاء الاصطناعي.');return}var E=env(),h=num('eh',1.6),K=num('kk',1);
@@ -371,8 +376,8 @@ $('dv1').onclick=function(){objShape('cyl')};$('dv2').onclick=function(){objShap
 var cyS=0;function syncCY(){var s=S[sel],k=s&&s.t==='cyl'?1:0;if(k===cyS)return;cyS=k;$('cy').style.display=k?'flex':'none'}
 function cyAdj(f){var s=S[sel];if(!s||s.t!=='cyl')return;f(s);if(s.g)aiFit(s,s.g,cvs.clientWidth,1)}
 $('cy1').onclick=function(){cyAdj(function(s){s.off=(s.off||0)-.05})};$('cy2').onclick=function(){cyAdj(function(s){s.off=(s.off||0)+.05})};
-$('cy3').onclick=function(){cyAdj(function(s){s.cov=Math.min(.9,(s.cov||.45)+.06)})};$('cy4').onclick=function(){cyAdj(function(s){s.cov=Math.max(.2,(s.cov||.45)-.06)})};
-$('cy5').onclick=function(){cyAdj(function(s){s.rw=Math.min(2.2,(s.rw||1)+.1)})};$('cy6').onclick=function(){cyAdj(function(s){s.rw=Math.max(.55,(s.rw||1)-.1)})};
+$('cy3').onclick=function(){cyAdj(function(s){s.cov=Math.min(.88,(s.cov||.48)+.06)})};$('cy4').onclick=function(){cyAdj(function(s){s.cov=Math.max(.22,(s.cov||.48)-.06)})};
+$('cy5').onclick=function(){cyAdj(function(s){s.rw=Math.min(2.0,(s.rw||1)+.1)})};$('cy6').onclick=function(){cyAdj(function(s){s.rw=Math.max(.55,(s.rw||1)-.1)})};
 var vxS=0;function syncVX(){var s=S[sel],k=s&&s.t==='area'?1:0;if(k===vxS)return;vxS=k;$('vx').style.display=k?'flex':'none'}
 $('v1').onclick=function(){var s=S[sel];if(!s||s.t!=='area')return;var E=env(),q=scr(s,E),n=q.length;if(q.some(function(z){return!z}))return;var a=q[n-1],b=q[0];s.R.push(RY([(a[0]+b[0])/2,(a[1]+b[1])/2],E))};
 $('v2').onclick=function(){var s=S[sel];if(s&&s.t==='area'&&s.R.length>3)s.R.pop()};
