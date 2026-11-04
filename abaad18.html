@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<title>أبعاد ١٨ · ثنائي الوضع</title>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#f3ead7;--gold:#d8b45c;--teal:#2a9d8f;--red:#e5483d;--pn:rgba(16,21,31,.92);--sf:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px);color-scheme:dark}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0;background:#0b0f17;color:var(--ink);font-family:Tajawal,system-ui,sans-serif;overflow:hidden}
+video,#ov,#gl3{position:fixed;inset:0;width:100%;height:100%}
+video{object-fit:cover;z-index:0}
+#gl3{z-index:1;pointer-events:none}
+#ov{z-index:2;touch-action:none}
+#banner{position:fixed;top:var(--sf);left:0;right:0;z-index:6;padding:8px 12px;text-align:center;font:800 18px Tajawal;display:none}
+#banner.ar{background:rgba(42,157,143,.95);color:#fff}
+#banner.est{background:rgba(180,100,20,.95);color:#fff}
+#top{position:fixed;top:calc(var(--sf) + 42px);left:0;right:0;height:86px;display:flex;gap:5px;padding:5px;background:var(--pn);z-index:3}
+.k{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-radius:12px;border:1px solid #2c3546;background:transparent;color:var(--ink);font:800 18px Tajawal;padding:0}
+.k b{font-size:28px;line-height:1.1;font-weight:400}.k.on{border-color:var(--gold);color:var(--gold);background:rgba(216,180,92,.16)}
+#side{position:fixed;right:5px;top:calc(var(--sf) + 138px);bottom:calc(var(--sb) + 108px);width:100px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;background:var(--pn);border-radius:14px;padding:6px;z-index:3}
+#side .k{flex:none;height:78px;font-size:16px}
+#bot{position:fixed;left:0;right:0;bottom:var(--sb);display:flex;gap:6px;padding:8px;background:var(--pn);z-index:3;overflow-x:auto}
+#bot .k{flex:none;min-width:100px;height:78px;font-size:20px}
+#go{position:fixed;left:12px;bottom:calc(var(--sb) + 100px);width:108px;height:108px;border-radius:50%;border:3px solid #fff;background:#e5483d;color:#fff;font:800 22px/1.2 Tajawal;z-index:3}
+#msg{position:fixed;left:10px;right:120px;bottom:calc(var(--sb) + 220px);z-index:4;display:none;background:#3a2a10;border:1px solid var(--gold);padding:12px;border-radius:12px;font-size:20px;line-height:1.55}
+#st{position:fixed;inset:calc(var(--sf) + 50px) 10px calc(var(--sb) + 20px) 10px;z-index:5;display:none;flex-direction:column;background:#141a28;border:1px solid var(--gold);border-radius:14px;padding:14px;gap:10px;overflow:auto}
+#st label{display:flex;justify-content:space-between;align-items:center;font-size:20px;gap:8px}
+#st input{width:100px;padding:10px;border-radius:10px;border:1px solid #2c3546;background:#0b0f17;color:var(--ink);font:700 20px Tajawal;text-align:center}
+#st button,#st .btn{padding:14px;border-radius:12px;border:1px solid var(--gold);background:transparent;color:var(--gold);font:700 20px Tajawal}
+#st p{margin:0;font-size:17px;line-height:1.55;color:#b8c0cc}
+#start{position:fixed;inset:0;z-index:9;background:#10151f;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center}
+#start h1{font:700 52px Amiri,serif;margin:0;color:var(--gold)}
+#start p{max-width:360px;line-height:1.75;margin:0;color:#b8c0cc;font-size:19px}
+#startBtn,#arBtn{padding:16px 40px;border:0;border-radius:32px;font:800 22px Tajawal;margin:4px}
+#startBtn{background:var(--gold);color:#241a05}
+#arBtn{background:var(--teal);color:#fff;display:none}
+#start .note{font-size:15px;color:#889;max-width:340px}
+#hud{position:fixed;left:10px;right:120px;top:calc(var(--sf) + 140px);z-index:4;display:none;background:rgba(20,26,40,.96);border:1px solid var(--gold);border-radius:12px;padding:12px;text-align:center}
+#hud .v{font:700 48px Amiri,serif;color:#f3ead7}#hud .u{color:var(--teal);font-size:22px}#hud .k{font-size:18px;color:var(--gold);border:0;background:none;height:auto}
+#pts{position:fixed;left:12px;bottom:calc(var(--sb) + 220px);display:none;gap:8px;z-index:3;flex-wrap:wrap}
+#pts button{padding:12px 14px;border-radius:12px;border:2px solid var(--gold);background:var(--pn);color:var(--gold);font:800 18px Tajawal}
+</style>
+</head>
+<body>
+<video id="cam" autoplay playsinline muted></video>
+<canvas id="gl3"></canvas>
+<canvas id="ov"></canvas>
+<div id="banner"></div>
+<div id="top">
+  <button class="k on" id="sR"><b>📷</b>خلفية</button>
+  <button class="k" id="sF"><b>🤳</b>أمامية</button>
+  <button class="k" id="bst"><b>⚙</b>ضبط</button>
+  <button class="k" id="modeBtn"><b>↔</b>الوضع</button>
+</div>
+<div id="side"></div>
+<div id="bot"></div>
+<button id="go">اعرض<br>القيمة</button>
+<div id="msg"></div>
+<div id="hud"><div class="k" id="hk"></div><div><span class="v" id="hv"></span> <span class="u" id="hu"></span></div><div id="hs" style="color:#b8c0cc;font-size:16px;margin-top:4px"></div></div>
+<div id="pts"><button id="p1">نقطة ١</button><button id="p2">نقطة ٢</button><button id="pclr">مسح النقاط</button></div>
+<div id="st">
+  <label>ارتفاع عينك (م) — للوضع التقديري<input id="eh" type="number" step="0.01" value="1.6"></label>
+  <label>زاوية الرؤية (°)<input id="fv" type="number" value="55"></label>
+  <label>معامل التصحيح<input id="kk" type="number" step="0.001" value="1"></label>
+  <p id="modeInfo"></p>
+  <button id="cl">إغلاق</button>
+</div>
+<div id="start">
+  <h1>أبعاد</h1>
+  <p>الإصدار ١٨ · وضعان في واجهة واحدة:<br>
+  <b style="color:#2a9d8f">واقع معزز</b> عند التوفر (قياسات دقيقة)<br>
+  <b style="color:#d8b45c">وضع تقديري</b> لباقي الأجهزة (مع تنبيه واضح)</p>
+  <button id="startBtn">ابدأ</button>
+  <button id="arBtn">ابدأ الواقع المعزز</button>
+  <p class="note" id="capNote">جارٍ فحص دعم الجهاز…</p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* ========== أبعاد ١٨ — ثنائي الوضع ========== */
+var PI=Math.PI,oa=0,ob=90,og=0,got=0,mute=0,ci=0,
+    S=[],sel=-1,mode='est',arSupported=false,xrSession=null,xrRefSpace=null,xrHitSource=null,
+    face='environment',started=0,res=null,resT=0,pts=[],tool='dist',
+    COLS=['#d8b45c','#e5483d','#2a9d8f','#4aa3ff','#ffffff','#b46cff','#ff8c3a'];
+
+var $=function(i){return document.getElementById(i)};
+function f2(x){return Number(x).toLocaleString('ar-EG',{maximumFractionDigits:x<10?2:1})}
+function num(i,d){var v=parseFloat($(i).value);return isNaN(v)?d:v}
+function msg(t){var m=$('msg');m.textContent=t;m.style.display='block';clearTimeout(msg.t);msg.t=setTimeout(function(){m.style.display='none'},6500)}
+function speak(t){if(mute)return;try{speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(t);u.lang='ar-SA';u.rate=.9;speechSynthesis.speak(u)}catch(e){}}
+function sp1(x){return(Math.round(x*10)/10).toString().replace('.',' فاصل ')}
+
+function setBanner(){
+  var b=$('banner');
+  if(mode==='ar'&&xrSession){b.className='ar';b.textContent='✓ واقع معزز — القياسات دقيقة قدر الإمكان';b.style.display='block'}
+  else{b.className='est';b.textContent='⚠ وضع تقديري — النتائج تقريبية · عاير ارتفاع العين من ⚙';b.style.display='block'}
+  $('modeInfo').textContent=mode==='ar'
+    ?'الوضع الحالي: واقع معزز. النقاط تُثبَّت على أسطح حقيقية عبر WebXR.'
+    :'الوضع الحالي: تقديري. يعتمد على حساس الميل وارتفاع عينك. ليس بديلاً عن القياس الهندسي الدقيق.';
+}
+
+/* ---- حساسات الميل (وضع تقديري) ---- */
+window.addEventListener('deviceorientation',function(e){if(e.beta==null)return;got=1;oa=e.alpha||0;ob=e.beta;og=e.gamma||0});
+function basis(){var a=oa*PI/180,b=ob*PI/180,g=og*PI/180,ca=Math.cos(a),sa=Math.sin(a),cb=Math.cos(b),sb=Math.sin(b),cg=Math.cos(g),sg=Math.sin(g);
+return{X:[ca*cg-sa*sb*sg,sa*cg+ca*sb*sg,-cb*sg],Y:[-sa*cb,ca*cb,sb],F:[-(ca*sg+sa*sb*cg),-(sa*sg-ca*sb*cg),-cb*cg]}}
+function focal(W,H){var V=$('cam'),vw=V.videoWidth||720,vh=V.videoHeight||1280;return(vw*Math.max(W/vw,H/vh)/2)/Math.tan(num('fv',55)*PI/360)}
+function ray(px,py,W,H,B,f){var u=(px-W/2)/f,v=-(py-H/2)/f,d=[B.F[0]+B.X[0]*u+B.Y[0]*v,B.F[1]+B.X[1]*u+B.Y[1]*v,B.F[2]+B.X[2]*u+B.Y[2]*v],n=Math.hypot(d[0],d[1],d[2]);return[d[0]/n,d[1]/n,d[2]/n]}
+function hitFloor(d){var h=num('eh',1.6);if(d[2]>=-0.02)return null;var t=h/-d[2];return[t*d[0],t*d[1],0]}
+function d3(a,b){return Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2])}
+
+/* ---- Three.js طبقة مجسمات ---- */
+var T3={ok:0,scene:null,cam:null,ren:null,meshes:{}};
+function init3D(){
+  if(T3.ok||!window.THREE)return;
+  var gl=$('gl3'),W=innerWidth,H=innerHeight;
+  T3.scene=new THREE.Scene();
+  T3.cam=new THREE.PerspectiveCamera(55,W/H,0.05,40);
+  T3.ren=new THREE.WebGLRenderer({canvas:gl,alpha:true,antialias:true});
+  T3.ren.setSize(W,H,false);T3.ren.setPixelRatio(Math.min(2,devicePixelRatio||1));T3.ren.setClearColor(0,0);
+  T3.scene.add(new THREE.AmbientLight(0xffffff,0.6));
+  var dir=new THREE.DirectionalLight(0xffffff,0.7);dir.position.set(0.3,1,0.4);T3.scene.add(dir);
+  T3.ok=1;
+  addEventListener('resize',function(){if(!T3.ok)return;T3.cam.aspect=innerWidth/innerHeight;T3.cam.updateProjectionMatrix();T3.ren.setSize(innerWidth,innerHeight,false)});
+}
+function oriQuat(){var a=oa*PI/180,b=ob*PI/180,g=og*PI/180;return new THREE.Quaternion().setFromEuler(new THREE.Euler(b-PI/2,-a,-g,'YXZ'))}
+function render3D(){
+  if(!T3.ok)return;
+  if(mode!=='ar'){T3.cam.quaternion.copy(oriQuat());var fv=num('fv',55);if(Math.abs(T3.cam.fov-fv)>0.4){T3.cam.fov=fv;T3.cam.updateProjectionMatrix()}}
+  T3.ren.render(T3.scene,T3.cam);
+}
+
+/* ---- كشف دعم AR (WebXR) ---- */
+async function checkAR(){
+  arSupported=false;
+  try{
+    if(navigator.xr&&navigator.xr.isSessionSupported){
+      arSupported=await navigator.xr.isSessionSupported('immersive-ar');
+    }
+  }catch(e){arSupported=false}
+  var n=$('capNote'),ab=$('arBtn');
+  if(arSupported){
+    n.textContent='جهازك يدعم WebXR واقع معزز — يُفضَّل استخدامه للقياسات الدقيقة.';
+    ab.style.display='inline-block';
+  }else{
+    n.textContent='لا يتوفر WebXR AR على هذا المتصفح/الجهاز. سيتم العمل بالوضع التقديري مع تنبيه واضح. لأفضل دقة استخدم جهازاً يدعم ARCore/ARKit مع متصفح متوافق.';
+  }
+}
+
+/* ---- بدء جلسة AR ---- */
+async function startAR(){
+  if(!arSupported){msg('الواقع المعزز غير مدعوم هنا');return}
+  try{
+    xrSession=await navigator.xr.requestSession('immersive-ar',{
+      requiredFeatures:['hit-test','local-floor'],
+      optionalFeatures:['dom-overlay','light-estimation'],
+      domOverlay:{root:document.body}
+    });
+    mode='ar';
+    var gl=$('gl3');
+    if(!T3.ok)init3D();
+    await T3.ren.xr.setSession(xrSession);
+    T3.ren.xr.enabled=true;
+    xrRefSpace=await xrSession.requestReferenceSpace('local-floor');
+    var viewerSpace=await xrSession.requestReferenceSpace('viewer');
+    xrHitSource=await xrSession.requestHitTestSource({space:viewerSpace});
+    xrSession.addEventListener('end',function(){xrSession=null;xrHitSource=null;mode='est';T3.ren.xr.enabled=false;setBanner();msg('انتهت جلسة الواقع المعزز — عاد الوضع التقديري')});
+    setBanner();
+    msg('واقع معزز فعّال: المس الشاشة لتثبيت نقاط على الأسطح الحقيقية');
+    speak('واقع معزز');
+  }catch(e){
+    mode='est';setBanner();
+    msg('تعذّر بدء الواقع المعزز ('+(e&&e.message||'خطأ')+'). الوضع التقديري متاح.');
+  }
+}
+
+/* ---- كاميرا ---- */
+async function cam(fc){
+  face=fc;var V=$('cam');
+  if(V.srcObject)V.srcObject.getTracks().forEach(function(t){t.stop()});
+  try{
+    V.srcObject=await navigator.mediaDevices.getUserMedia({video:{facingMode:fc,width:{ideal:1280},height:{ideal:720}}});
+    $('sR').classList.toggle('on',fc==='environment');
+    $('sF').classList.toggle('on',fc==='user');
+  }catch(e){msg('تعذّر فتح الكاميرا')}
+}
+$('sR').onclick=function(){cam('environment')};
+$('sF').onclick=function(){cam('user')};
+
+/* ---- أدوات الواجهة ---- */
+var BT=[
+  ['dist','📏','مسافة'],
+  ['hgt','↕','ارتفاع'],
+  ['area','⬡','مساحة'],
+  ['cyl','▯','أسطوانة'],
+  ['pt','•','نقطة']
+];
+$('bot').innerHTML=BT.map(function(t){return'<button class="k" data-m="'+t[0]+'"><b>'+t[1]+'</b>'+t[2]+'</button>'}).join('');
+[].forEach.call($('bot').querySelectorAll('button'),function(b){
+  b.onclick=function(){
+    tool=b.dataset.m;pts=[];
+    [].forEach.call($('bot').querySelectorAll('.k'),function(x){x.classList.remove('on')});
+    b.classList.add('on');
+    $('pts').style.display=(tool==='dist'||tool==='hgt'||tool==='area')?'flex':'none';
+    if(tool==='dist')msg(mode==='ar'?'ثبّت نقطتين على السطح (لمسة لكل نقطة)':'المس نقطتين على الأرض أو الجدار في الصورة');
+    if(tool==='hgt')msg('نقطة على القاعدة ثم نقطة على القمة');
+    if(tool==='area')msg('ثبّت 3 نقاط على الأقل حول القطعة ثم اعرض القيمة');
+    if(tool==='cyl')msg('المس الجسم أو المكان لوضع أسطوانة مجسّمة');
+    if(tool==='pt')msg('المس لإضافة نقطة مرجعية');
+  };
+});
+
+var SB=[['pal','🎨','لون'],['undo','↩','تراجع'],['clr','🗑','مسح'],['ai','🤖','ذكاء']];
+$('side').innerHTML=SB.map(function(t){return'<button class="k" data-t="'+t[0]+'"><b>'+t[1]+'</b>'+t[2]+'</button>'}).join('');
+[].forEach.call($('side').querySelectorAll('button'),function(b){
+  b.onclick=function(){
+    var t=b.dataset.t;
+    if(t==='clr'){S.forEach(function(s){if(s.mesh)T3.scene.remove(s.mesh)});S=[];pts=[];res=null;$('hud').style.display='none';msg('تم المسح');return}
+    if(t==='undo'){var last=S.pop();if(last&&last.mesh)T3.scene.remove(last.mesh);pts.pop();return}
+    if(t==='pal'){ci=(ci+1)%COLS.length;msg('اللون: '+COLS[ci]);return}
+    if(t==='ai'){aiToggle();return}
+  };
+});
+
+$('bst').onclick=function(){$('st').style.display=$('st').style.display==='flex'?'none':'flex'};
+$('cl').onclick=function(){$('st').style.display='none'};
+$('modeBtn').onclick=function(){
+  if(mode==='ar'&&xrSession){xrSession.end();return}
+  if(arSupported)startAR();
+  else msg('الواقع المعزز غير متاح. أنت في الوضع التقديري.');
+};
+
+/* ---- نقاط القياس ---- */
+function addPoint(screenX,screenY,world){
+  pts.push({sx:screenX,sy:screenY,w:world});
+  if(tool==='dist'&&pts.length>=2){
+    var a=pts[pts.length-2].w,b=pts[pts.length-1].w;
+    if(a&&b){var v=d3(a,b)*num('kk',1);showRes('المسافة',v,'م',mode==='ar'?'قياس AR':'تقديري · أفقي '+f2(Math.hypot(a[0]-b[0],a[1]-b[1])*num('kk',1))+' م')}
+  }
+  if(tool==='hgt'&&pts.length>=2){
+    var a=pts[pts.length-2].w,b=pts[pts.length-1].w;
+    if(a&&b){var v=Math.abs(a[2]-b[2])*num('kk',1);showRes('الارتفاع',v,'م',mode==='ar'?'قياس AR':'تقديري')}
+  }
+}
+function showRes(k,v,u,sub){
+  res={k:k,v:v,u:u,sub:sub};resT=performance.now();
+  $('hud').style.display='block';$('hk').textContent='✓ '+k;$('hv').textContent=f2(v);$('hu').textContent=u;$('hs').textContent=sub||'';
+  speak(k+' '+sp1(v)+' '+u);
+}
+$('pclr').onclick=function(){pts=[];msg('نُظفت النقاط')};
+$('p1').onclick=function(){msg('المس الشاشة لنقطة ١')};
+$('p2').onclick=function(){msg('المس الشاشة لنقطة ٢')};
+
+$('go').onclick=function(){
+  if(tool==='area'&&pts.length>=3){
+    var P=pts.map(function(p){return p.w}).filter(Boolean);
+    if(P.length>=3){
+      var s=[0,0,0],i;for(i=0;i<P.length;i++){var p=P[i],q=P[(i+1)%P.length];s[0]+=p[1]*q[2]-p[2]*q[1];s[1]+=p[2]*q[0]-p[0]*q[2];s[2]+=p[0]*q[1]-p[1]*q[0]}
+      var area=Math.hypot(s[0],s[1],s[2])/2*num('kk',1)*num('kk',1);
+      showRes('المساحة',area,'م²',mode==='ar'?'AR · '+P.length+' نقاط':'تقديري · '+P.length+' نقاط');
+    }else msg('نقاط غير صالحة — وجّه نحو الأرض أو سطح معروف');
+  }else if(res){showRes(res.k,res.v,res.u,res.sub)}
+  else msg('اختر أداة وثبّت النقاط أولاً');
+};
+
+/* ---- تقدير عالمي من الشاشة (وضع تقديري) ---- */
+function estWorld(sx,sy){
+  var W=cvs.clientWidth,H=cvs.clientHeight,B=basis(),f=focal(W,H),d=ray(sx,sy,W,H,B,f);
+  var fl=hitFloor(d);if(fl)return fl;
+  /* إن لم تصب الأرض: افترض عمقاً متوسطاً */
+  var depth=2.0;return[d[0]*depth,d[1]*depth,num('eh',1.6)+d[2]*depth];
+}
+
+/* ---- أسطوانة 3D ---- */
+function placeCylAt(sx,sy,world){
+  if(!T3.ok)init3D();
+  var rad=0.35,hgt=0.9;
+  var geo=new THREE.CylinderGeometry(rad,rad,hgt,28,1,true);
+  var mat=new THREE.MeshStandardMaterial({color:new THREE.Color(COLS[ci]),transparent:true,opacity:0.4,side:THREE.DoubleSide,metalness:0.12,roughness:0.55,depthWrite:false});
+  var mesh=new THREE.Mesh(geo,mat);
+  var edges=new THREE.LineSegments(new THREE.EdgesGeometry(geo),new THREE.LineBasicMaterial({color:COLS[ci],transparent:true,opacity:0.85}));
+  mesh.add(edges);
+  if(world)mesh.position.set(world[0],world[1]+hgt/2,world[2]);
+  else mesh.position.set(0,hgt/2,-2);
+  T3.scene.add(mesh);
+  S.push({t:'cyl',mesh:mesh,c:COLS[ci]});
+  msg('أسطوانة مجسّمة ثلاثية الأبعاد');
+}
+
+/* ---- لمس ---- */
+var cvs=$('ov');
+function pos(e){var r=cvs.getBoundingClientRect();return[e.clientX-r.left,e.clientY-r.top]}
+cvs.addEventListener('pointerdown',function(e){
+  var p=pos(e);
+  if(mode==='ar'&&xrSession&&xrHitSource){
+    /* في AR: النقاط من hit-test تُحدَّث في حلقة الإطارات؛ هنا نضع علامة طلب */
+    pendingHit={x:p[0],y:p[1]};msg('جاري تثبيت النقطة على السطح…');return;
+  }
+  var w=estWorld(p[0],p[1]);
+  if(tool==='cyl'){placeCylAt(p[0],p[1],w);return}
+  if(tool==='dist'||tool==='hgt'||tool==='area'||tool==='pt'){addPoint(p[0],p[1],w)}
+});
+var pendingHit=null,lastHitPose=null;
+
+/* ---- رسم ثنائي ---- */
+function drawOverlay(){
+  var W=cvs.clientWidth,H=cvs.clientHeight;if(!W)return;
+  if(cvs.width!==W){cvs.width=W;cvs.height=H}
+  var x=cvs.getContext('2d');x.clearRect(0,0,W,H);
+  /* نقاط */
+  pts.forEach(function(pt,i){
+    x.beginPath();x.arc(pt.sx,pt.sy,12,0,7);x.fillStyle=COLS[i%COLS.length];x.fill();x.strokeStyle='#fff';x.lineWidth=2;x.stroke();
+    x.fillStyle='#111';x.font='800 16px Tajawal';x.textAlign='center';x.fillText(String(i+1),pt.sx,pt.sy+5);
+  });
+  if(pts.length>=2){
+    for(var i=1;i<pts.length;i++){
+      x.strokeStyle=COLS[0];x.lineWidth=3;x.beginPath();x.moveTo(pts[i-1].sx,pts[i-1].sy);x.lineTo(pts[i].sx,pts[i].sy);x.stroke();
+    }
+  }
+  if(ai.on)drawDets(x);
+}
+
+/* ---- ذكاء اصطناعي ---- */
+var ai={on:0,m:null,dets:[],busy:0};
+function ld(u){return new Promise(function(ok,no){var e=document.createElement('script');e.src=u;e.onload=ok;e.onerror=no;document.head.appendChild(e)})}
+async function aiToggle(){
+  if(ai.on){ai.on=0;ai.dets=[];msg('إيقاف الذكاء الاصطناعي');return}
+  if(!ai.m){
+    msg('تحميل نموذج الذكاء الاصطناعي…');
+    try{
+      await ld('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js');
+      await ld('https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js');
+      ai.m=await cocoSsd.load({base:'lite_mobilenet_v2'});
+    }catch(e){msg('تعذّر التحميل — تحقق من الإنترنت');return}
+  }
+  ai.on=1;msg('الذكاء الاصطناعي يعمل');aiLoop();
+}
+function aiLoop(){
+  if(!ai.on)return;
+  var V=$('cam');
+  if(!ai.busy&&V.videoWidth&&V.readyState>=2){
+    ai.busy=1;
+    ai.m.detect(V,12).then(function(r){
+      var W=cvs.clientWidth,H=cvs.clientHeight,k=Math.max(W/V.videoWidth,H/V.videoHeight),ox=(W-V.videoWidth*k)/2,oy=(H-V.videoHeight*k)/2;
+      ai.dets=r.filter(function(d){return d.score>.45}).map(function(d){return{x:ox+d.bbox[0]*k,y:oy+d.bbox[1]*k,w:d.bbox[2]*k,h:d.bbox[3]*k,c:d.class}});
+      ai.busy=0;
+    }).catch(function(){ai.busy=0});
+  }
+  setTimeout(aiLoop,80);
+}
+var AR={person:'شخص',chair:'كرسي',bottle:'زجاجة',cup:'كوب','cell phone':'هاتف',book:'كتاب',laptop:'حاسوب'};
+function an(c){return AR[c]||c}
+function drawDets(x){
+  ai.dets.forEach(function(d){
+    x.strokeStyle='#2a9d8f';x.lineWidth=2;x.strokeRect(d.x,d.y,d.w,d.h);
+    x.fillStyle='#2a9d8f';x.font='800 18px Tajawal';x.fillText(an(d.c),d.x+4,d.y-6);
+  });
+}
+
+/* ---- حلقة الإطارات ---- */
+var last=0;
+function frame(t){
+  requestAnimationFrame(frame);
+  if(t-last<40)return;last=t;
+  drawOverlay();
+  if(mode!=='ar')render3D();
+  /* AR hit-test */
+  if(mode==='ar'&&xrSession&&T3.ren.xr&&T3.ren.xr.isPresenting){
+    /* three.js يدير الرسم عبر setAnimationLoop عند تفعيل xr */
+  }
+}
+/* عند تفعيل XR نستخدم setAnimationLoop */
+function bindXRLoop(){
+  if(!T3.ok)return;
+  T3.ren.setAnimationLoop(function(time,frame){
+    if(mode==='ar'&&frame&&xrHitSource&&xrRefSpace){
+      var hits=frame.getHitTestResults(xrHitSource);
+      if(hits.length&&pendingHit){
+        var pose=hits[0].getPose(xrRefSpace);
+        if(pose){
+          var p=pose.transform.position;
+          var w=[p.x,p.y,p.z];
+          if(tool==='cyl')placeCylAt(pendingHit.x,pendingHit.y,w);
+          else addPoint(pendingHit.x,pendingHit.y,w);
+          pendingHit=null;
+        }
+      }
+      /* حدّث مواضع المجسمات إن لزم */
+    }
+    if(mode==='ar')T3.ren.render(T3.scene,T3.cam);
+    else render3D();
+    drawOverlay();
+  });
+}
+
+/* ---- بدء ---- */
+$('startBtn').onclick=async function(){
+  try{if(window.DeviceOrientationEvent&&DeviceOrientationEvent.requestPermission)await DeviceOrientationEvent.requestPermission()}catch(e){}
+  $('start').style.display='none';started=1;mode='est';setBanner();
+  init3D();cam('environment');bindXRLoop();
+  speak('أهلاً');
+  msg('وضع تقديري. عاير ارتفاع العين من ⚙ إن أمكن. إن ظهر زر الواقع المعزز فاستخدمه للدقة.');
+  setTimeout(function(){if(!got)msg('اسمح لحساسات الحركة لتحسين التقدير')},2500);
+};
+$('arBtn').onclick=async function(){
+  try{if(window.DeviceOrientationEvent&&DeviceOrientationEvent.requestPermission)await DeviceOrientationEvent.requestPermission()}catch(e){}
+  $('start').style.display='none';started=1;init3D();cam('environment');bindXRLoop();
+  await startAR();setBanner();
+};
+
+checkAR();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
